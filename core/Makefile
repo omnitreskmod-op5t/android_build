@@ -309,7 +309,12 @@ BUILD_VERSION_TAGS += $(BUILD_KEYS)
 BUILD_VERSION_TAGS := $(subst $(space),$(comma),$(sort $(BUILD_VERSION_TAGS)))
 
 # A human-readable string that descibes this build in detail.
-build_desc := $(TARGET_PRODUCT)-$(TARGET_BUILD_VARIANT) $(PLATFORM_VERSION) $(BUILD_ID) $(BUILD_NUMBER_FROM_FILE) $(BUILD_VERSION_TAGS)
+ifneq (,$(strip $(OMNI_PRIVATE_BUILD_DESC)))
+  build_desc := $(OMNI_PRIVATE_BUILD_DESC)
+else
+  build_desc := $(TARGET_PRODUCT)-$(TARGET_BUILD_VARIANT) $(PLATFORM_VERSION) $(BUILD_ID) $(BUILD_NUMBER_FROM_FILE) $(BUILD_VERSION_TAGS)
+endif
+
 $(intermediate_system_build_prop): PRIVATE_BUILD_DESC := $(build_desc)
 
 # The string used to uniquely identify the combined build and product; used by the OTA server.
@@ -319,7 +324,11 @@ ifeq (,$(strip $(BUILD_FINGERPRINT)))
   else
     BF_BUILD_NUMBER := $(file <$(BUILD_NUMBER_FILE))
   endif
-  BUILD_FINGERPRINT := $(PRODUCT_BRAND)/$(TARGET_PRODUCT)/$(TARGET_DEVICE):$(PLATFORM_VERSION)/$(BUILD_ID)/$(BF_BUILD_NUMBER):$(TARGET_BUILD_VARIANT)/$(BUILD_VERSION_TAGS)
+  ifeq (,$(strip $(OMNI_BUILD_FINGERPRINT)))
+    BUILD_FINGERPRINT := $(OMNI_BUILD_FINGERPRINT)
+  else
+    BUILD_FINGERPRINT := $(PRODUCT_BRAND)/$(TARGET_PRODUCT)/$(TARGET_DEVICE):$(PLATFORM_VERSION)/$(BUILD_ID)/$(BF_BUILD_NUMBER):$(TARGET_BUILD_VARIANT)/$(BUILD_VERSION_TAGS)
+  endif
 endif
 # unset it for safety.
 BF_BUILD_NUMBER :=
@@ -426,7 +435,7 @@ endif
 	        AB_OTA_UPDATER="$(AB_OTA_UPDATER)" \
 	        PLATFORM_VERSION="$(PLATFORM_VERSION)" \
 	        PLATFORM_SECURITY_PATCH="$(PLATFORM_SECURITY_PATCH)" \
-		PLATFORM_SECURITY_PATCH="$(PLATFORM_SECURITY_PATCH)" \
+		PLATFORM_SECURITY_PATCH_OMNI="$(PLATFORM_SECURITY_PATCH_OMNI)" \
 	        PLATFORM_BASE_OS="$(PLATFORM_BASE_OS)" \
 	        PLATFORM_SDK_VERSION="$(PLATFORM_SDK_VERSION)" \
 	        PLATFORM_PREVIEW_SDK_VERSION="$(PLATFORM_PREVIEW_SDK_VERSION)" \
@@ -1549,15 +1558,15 @@ endef
 # $(4): staging dir
 # Depmod requires a well-formed kernel version so 0.0 is used as a placeholder.
 define build-image-kernel-modules
-    $(hide) rm -rf $(2)/lib/modules
-    $(hide) mkdir -p $(2)/lib/modules
-    $(hide) cp $(1) $(2)/lib/modules/
-    $(hide) rm -rf $(4)
-    $(hide) mkdir -p $(4)/lib/modules/0.0/$(3)lib/modules
-    $(hide) cp $(1) $(4)/lib/modules/0.0/$(3)lib/modules
-    $(hide) $(DEPMOD) -b $(4) 0.0
-    $(hide) sed -e 's/\(.*modules.*\):/\/\1:/g' -e 's/ \([^ ]*modules[^ ]*\)/ \/\1/g' $(4)/lib/modules/0.0/modules.dep > $(2)/lib/modules/modules.dep
-    $(hide) cp $(4)/lib/modules/0.0/modules.alias $(2)/lib/modules
+    rm -rf $(2)/lib/modules
+    mkdir -p $(2)/lib/modules
+    cp $(1) $(2)/lib/modules/
+    rm -rf $(4)
+    mkdir -p $(4)/lib/modules/0.0/$(3)lib/modules
+    cp $(1) $(4)/lib/modules/0.0/$(3)lib/modules
+    $(DEPMOD) -b $(4) 0.0
+    sed -e 's/\(.*modules.*\):/\/\1:/g' -e 's/ \([^ ]*modules[^ ]*\)/ \/\1/g' $(4)/lib/modules/0.0/modules.dep > $(2)/lib/modules/modules.dep
+    cp $(4)/lib/modules/0.0/modules.alias $(2)/lib/modules
 endef
 
 # -----------------------------------------------------------------

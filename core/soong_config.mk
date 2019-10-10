@@ -34,6 +34,7 @@ $(call add_json_bool, Platform_sdk_final,                $(filter REL,$(PLATFORM
 $(call add_json_csv,  Platform_version_active_codenames, $(PLATFORM_VERSION_ALL_CODENAMES))
 $(call add_json_csv,  Platform_version_future_codenames, $(PLATFORM_VERSION_FUTURE_CODENAMES))
 $(call add_json_str,  Platform_security_patch,           $(PLATFORM_SECURITY_PATCH))
+$(call add_json_str,  Platform_security_patch_omni,      $(PLATFORM_SECURITY_PATCH_OMNI))
 $(call add_json_str,  Platform_preview_sdk_version,      $(PLATFORM_PREVIEW_SDK_VERSION))
 $(call add_json_str,  Platform_base_os,                  $(PLATFORM_BASE_OS))
 
@@ -167,11 +168,7 @@ $(call add_json_list, ProductHiddenAPIStubsTest,         $(PRODUCT_HIDDENAPI_STU
 
 $(call add_json_list, TargetFSConfigGen,                 $(TARGET_FS_CONFIG_GEN))
 
-#omni
-$(call add_json_bool, Healthd_enable_op_fastchg,             $(filter true,$(HEALTHD_ENABLE_OP_FASTCHG_CHECK)))
-
 $(call add_json_map, VendorVars)
-
 $(foreach namespace,$(SOONG_CONFIG_NAMESPACES),\
   $(call add_json_map, $(namespace))\
   $(foreach key,$(SOONG_CONFIG_$(namespace)),\
@@ -179,9 +176,11 @@ $(foreach namespace,$(SOONG_CONFIG_NAMESPACES),\
   $(call end_json_map))
 $(call end_json_map)
 
+include vendor/omni/build/soong/soong_config.mk
+
 $(call json_end)
 
-include vendor/omni/build/soong/soong_config.mk
+
 
 
 $(file >$(SOONG_VARIABLES).tmp,$(json_contents))
