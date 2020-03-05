@@ -300,10 +300,14 @@ endif
 # non-default dev keys (usually private keys from a vendor directory).
 # Both of these tags will be removed and replaced with "release-keys"
 # when the target-files is signed in a post-build step.
+ifneq ($(filter $(ROM_BUILDTYPE), WEEKLY GAPPS),)
+BUILD_KEYS := release-keys
+else
 ifeq ($(DEFAULT_SYSTEM_DEV_CERTIFICATE),build/target/product/security/testkey)
 BUILD_KEYS := release-keys
 else
 BUILD_KEYS := dev-keys
+endif
 endif
 BUILD_VERSION_TAGS += $(BUILD_KEYS)
 BUILD_VERSION_TAGS := $(subst $(space),$(comma),$(sort $(BUILD_VERSION_TAGS)))
@@ -3674,6 +3678,7 @@ endif
 ifeq ($(build_otatools_package),true)
 OTATOOLS :=  $(HOST_OUT_EXECUTABLES)/minigzip \
   $(HOST_OUT_EXECUTABLES)/aapt \
+  $(HOST_OUT_EXECUTABLES)/aapt2 \
   $(HOST_OUT_EXECUTABLES)/checkvintf \
   $(HOST_OUT_EXECUTABLES)/mkbootfs \
   $(HOST_OUT_EXECUTABLES)/mkbootimg \
@@ -4950,6 +4955,7 @@ deps := \
 	$(target_notice_file_txt) \
 	$(tools_notice_file_txt) \
 	$(OUT_DOCS)/offline-sdk-timestamp \
+	$(SDK_METADATA_FILES) \
 	$(SYMBOLS_ZIP) \
 	$(COVERAGE_ZIP) \
 	$(APPCOMPAT_ZIP) \
